@@ -1,0 +1,32 @@
+# Project: Project3
+# Makefile created by Dev-C++ 5.4.1
+
+CPP      = g++.exe
+CC       = gcc.exe
+WINDRES  = windres.exe
+OBJ      = Song_Sot_Giua_Vong_Vay.o GameDraw.o
+LINKOBJ  = Song_Sot_Giua_Vong_Vay.o GameDraw.o
+LIBS     = -L"D:/Dev-Cpp/MinGW32/lib" -static-libstdc++ -static-libgcc -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 
+INCS     = -I"D:/Dev-Cpp/MinGW32/include"
+CXXINCS  = -I"D:/Dev-Cpp/MinGW32/include"
+BIN      = Song_Sot_Giua_Vong_Vay.exe
+CXXFLAGS = $(CXXINCS) 
+CFLAGS   = $(INCS) 
+RM       = rm -f
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before $(BIN) all-after
+
+
+clean: clean-custom
+	${RM} $(OBJ) $(BIN)
+
+$(BIN): $(OBJ)
+	$(CPP) $(LINKOBJ) -o $(BIN) $(LIBS)
+
+Song_Sot_Giua_Vong_Vay.o: Song_Sot_Giua_Vong_Vay.cpp
+	$(CPP) -c Song_Sot_Giua_Vong_Vay.cpp -o Song_Sot_Giua_Vong_Vay.o $(CXXFLAGS)
+
+GameDraw.o: GameDraw.cpp
+	$(CPP) -c GameDraw.cpp -o GameDraw.o $(CXXFLAGS)
