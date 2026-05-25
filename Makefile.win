@@ -4,8 +4,8 @@
 CPP      = g++.exe
 CC       = gcc.exe
 WINDRES  = windres.exe
-OBJ      = Song_Sot_Giua_Vong_Vay.o GameDraw.o
-LINKOBJ  = Song_Sot_Giua_Vong_Vay.o GameDraw.o
+OBJ      = Globals.o Draw.o Game.o Menu.o main.o
+LINKOBJ  = Globals.o Draw.o Game.o Menu.o main.o
 LIBS     = -L"D:/Dev-Cpp/MinGW32/lib" -static-libstdc++ -static-libgcc -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 
 INCS     = -I"D:/Dev-Cpp/MinGW32/include"
 CXXINCS  = -I"D:/Dev-Cpp/MinGW32/include"
@@ -25,8 +25,17 @@ clean: clean-custom
 $(BIN): $(OBJ)
 	$(CPP) $(LINKOBJ) -o $(BIN) $(LIBS)
 
-Song_Sot_Giua_Vong_Vay.o: Song_Sot_Giua_Vong_Vay.cpp
-	$(CPP) -c Song_Sot_Giua_Vong_Vay.cpp -o Song_Sot_Giua_Vong_Vay.o $(CXXFLAGS)
+Globals.o: Globals.cpp
+	$(CPP) -c Globals.cpp -o Globals.o $(CXXFLAGS)
 
-GameDraw.o: GameDraw.cpp
-	$(CPP) -c GameDraw.cpp -o GameDraw.o $(CXXFLAGS)
+Draw.o: Draw.cpp
+	$(CPP) -c Draw.cpp -o Draw.o $(CXXFLAGS)
+
+Game.o: Game.cpp
+	$(CPP) -c Game.cpp -o Game.o $(CXXFLAGS)
+
+Menu.o: Menu.cpp
+	$(CPP) -c Menu.cpp -o Menu.o $(CXXFLAGS)
+
+main.o: main.cpp
+	$(CPP) -c main.cpp -o main.o $(CXXFLAGS)

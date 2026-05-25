@@ -1,0 +1,1234 @@
+#include <graphics.h>
+#include <windows.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#include "Config.h"
+#include "Types.h"
+#include "Globals.h"
+#include "Draw.h"
+#include "Game.h"
+
+float dist2(float x1,float y1,float x2,float y2){
+
+    float dx = x1 - x2;
+    float dy = y1 - y2;
+
+    return sqrt(dx*dx + dy*dy);
+}
+
+float difficultyHpMul(){
+
+    if(difficulty == DIFF_EASY)
+        return 0.8f;
+
+    if(difficulty == DIFF_HARD)
+        return 1.65f;
+
+    return 1.0f;
+}
+
+float difficultySpeedMul(){
+
+    if(difficulty == DIFF_EASY)
+        return 0.9f;
+
+    if(difficulty == DIFF_HARD)
+        return 1.25f;
+
+    return 1.0f;
+}void loadHighScore(){
+
+    FILE *f = fopen("highscore.txt","r");
+
+    if(f){
+
+        fscanf(f,"%d",&highScore);
+
+        fclose(f);
+    }
+}
+
+void saveHighScore(){
+
+    if(p.score > highScore){
+
+        FILE *f = fopen("highscore.txt","w");
+
+        if(f){
+
+            fprintf(f,"%d",p.score);
+
+            fclose(f);
+        }
+
+        highScore = p.score;
+    }
+}
+
+void clearArrays(){
+
+    for(int i=0;i<MAX_BULLETS;i++)
+        bullets[i].active = 0;
+
+    for(int i=0;i<MAX_ENEMIES;i++)
+        enemies[i].active = 0;
+
+    boxItem.active = 0;
+
+    portal.active = 0;
+
+    obsCount = 0;
+
+    bossSpawned = 0;
+}
+
+void addObs(int x,int y,int w,int h,int type){
+
+    if(obsCount < MAX_OBS){
+
+        obs[obsCount].x = x;
+        obs[obsCount].y = y;
+
+        obs[obsCount].w = w;
+        obs[obsCount].h = h;
+
+        obs[obsCount].type = type;
+
+        obsCount++;
+    }
+}
+
+void setupMap(int map){
+
+    clearArrays();
+
+    p.map = map;
+
+    p.x = W/2;
+    p.y = H/2;
+
+    spawnTimer = 15;
+
+    boxTimer = 500;
+
+    if(map == 1){
+
+        addObs(90,140,190,80,1);
+
+        addObs(450,120,80,150,2);
+
+        addObs(850,240,150,95,3);
+
+        addObs(300,510,220,85,1);
+
+        addObs(650,500,120,70,3);
+    }
+
+    if(map == 2){
+
+        addObs(80,160,180,70,4);
+
+        addObs(470,330,150,100,4);
+
+        addObs(780,130,190,90,5);
+
+        addObs(330,540,190,70,5);
+
+        addObs(900,520,130,70,4);
+    }
+
+    if(map == 3){
+
+        addObs(150,130,160,110,6);
+
+        addObs(510,210,150,120,7);
+
+        addObs(820,420,210,90,7);
+
+        addObs(250,540,180,80,6);
+
+        addObs(650,110,120,80,7);
+    }
+
+    if(map == 4){
+
+        addObs(90,140,150,75,1);
+
+        addObs(330,190,170,90,4);
+
+        addObs(610,340,180,90,7);
+
+        addObs(850,170,150,105,6);
+
+        addObs(285,540,190,70,5);
+
+        addObs(760,540,160,80,3);
+    }
+}
+
+
+
+int hitObs(float x,float y,int r){
+
+    for(int i=0;i<obsCount;i++){
+
+        if(
+            x+r > obs[i].x &&
+            x-r < obs[i].x + obs[i].w &&
+            y+r > obs[i].y &&
+            y-r < obs[i].y + obs[i].h
+        )
+            return 1;
+    }
+
+    return 0;
+}
+
+void resetGame(){
+
+    p.maxHp = 100;
+
+    p.hp = 100;
+
+    p.speed = 4.2f;
+
+    p.fireCd = 12;
+
+    p.fireTimer = 0;
+
+    p.bulletCount = 1;
+
+    p.score = 0;
+
+    p.alive = 1;
+
+    p.slowTimer = 0;
+
+    p.burnTimer = 0;
+
+    p.dashCd = 0;
+
+    p.dashTimer = 0;
+    
+    p.dashKeyOld = 0;
+
+    setupMap(1);
+}
+
+void initGameSystem(){
+
+    srand((unsigned)time(NULL));
+
+    W = GetSystemMetrics(SM_CXSCREEN);
+
+    H = GetSystemMetrics(SM_CYSCREEN);
+
+    initwindow(
+        W,
+        H,
+        (char*)"LAST SURVIVOR: ZOMBIE CHAOS"
+    );
+
+    loadHighScore();
+}
+
+
+void spawnEnemy(int boss){
+
+    for(int i=0;i<MAX_ENEMIES;i++){
+
+        if(!enemies[i].active){
+
+            Enemy *e = &enemies[i];
+
+            e->active = 1;
+
+            e->boss = boss;
+
+            e->type = 1;
+
+            if(p.map == 4)
+                e->type = 1 + rand()%3;
+            else
+                e->type = p.map;
+
+            int side = rand()%4;
+
+            if(side == 0){
+                e->x = 20;
+                e->y = rand()%H;
+            }
+
+            if(side == 1){
+                e->x = W - 20;
+                e->y = rand()%H;
+            }
+
+            if(side == 2){
+                e->x = rand()%W;
+                e->y = 20;
+            }
+
+            if(side == 3){
+                e->x = rand()%W;
+                e->y = H - 20;
+            }
+
+            if(boss){
+
+                e->hp = e->maxHp =
+                    (int)((420 + p.map*180) * difficultyHpMul());
+
+                e->speed = 1.05f * difficultySpeedMul();
+
+                e->skillCd = 120;
+            }
+            else{
+
+                int special = rand()%4 == 0;
+
+                int baseHp = special ? 80 : 38;
+
+                e->hp = e->maxHp =
+                    (int)(baseHp * difficultyHpMul());
+
+                e->speed =
+                    (special ? 2.05f : 1.25f) * difficultySpeedMul();
+
+                if(special)
+                    e->type += 10;
+            }
+
+            e->atkCd = 0;
+
+            return;
+        }
+    }
+}
+
+
+void shoot(){
+
+    if(p.fireTimer > 0)
+        return;
+
+    p.fireTimer = p.fireCd;
+
+    int mx = mousex();
+    int my = mousey();
+
+    float ang = atan2(
+        (float)my - p.y,
+        (float)mx - p.x
+    );
+
+    for(int b=0;b<p.bulletCount;b++){
+
+        float spread =
+            (b - (p.bulletCount-1)/2.0f) * 0.18f;
+
+        for(int i=0;i<MAX_BULLETS;i++){
+
+            if(!bullets[i].active){
+
+                bullets[i].active = 1;
+
+                bullets[i].x = p.x + cos(ang) * 28;
+                bullets[i].y = p.y + sin(ang) * 28;
+
+                bullets[i].vx = cos(ang + spread) * 12;
+                bullets[i].vy = sin(ang + spread) * 12;
+
+                bullets[i].life = 75;
+
+                break;
+            }
+        }
+    }
+}
+
+
+void spawnBox(){
+
+    boxItem.active = 1;
+
+    boxItem.hp = 2;
+
+    boxItem.x = 80 + rand()%(W-160);
+
+    boxItem.y = 80 + rand()%(H-160);
+
+    boxItem.buff = rand()%4;
+}
+
+void applyBuff(int type){
+
+    if(type == 0){
+
+        p.maxHp += 20;
+
+        p.hp += 25;
+
+        if(p.hp > p.maxHp)
+            p.hp = p.maxHp;
+    }
+
+    if(type == 1){
+
+        p.fireCd -= 2;
+
+        if(p.fireCd < 6)
+            p.fireCd = 6;
+    }
+
+    if(type == 2){
+
+        p.bulletCount++;
+
+        if(p.bulletCount > 3)
+            p.bulletCount = 3;
+    }
+
+    if(type == 3){
+
+        p.speed += 0.35f;
+
+        if(p.speed > 6.2f)
+            p.speed = 6.2f;
+    }
+}
+
+
+void dash(){
+
+    if(p.dashCd > 0)
+        return;
+
+    float a = atan2(
+        (float)mousey() - p.y,
+        (float)mousex() - p.x
+    );
+
+    float step = 18;
+    float dashDistance = 150;
+
+    float moved = 0;
+
+    while(moved < dashDistance){
+
+        float nx = p.x + cos(a) * step;
+        float ny = p.y + sin(a) * step;
+
+        if(nx < 25 || nx > W-25 || ny < 25 || ny > H-25)
+            break;
+
+        if(hitObs(nx,ny,15))
+            break;
+
+        p.x = nx;
+        p.y = ny;
+
+        moved += step;
+    }
+
+    p.dashCd = 180;
+    p.dashTimer = 16;
+}
+
+
+void updatePlayer(){
+
+    float sp = p.speed;
+
+    if(p.slowTimer > 0){
+
+        sp *= 0.55f;
+
+        p.slowTimer--;
+    }
+
+    if(p.burnTimer > 0){
+
+        p.hp -= 0.08f;
+
+        p.burnTimer--;
+    }
+
+    if(p.dashCd > 0)
+        p.dashCd--;
+
+    if(p.dashTimer > 0)
+        p.dashTimer--;
+
+    float nx = p.x;
+    float ny = p.y;
+
+    if(GetAsyncKeyState('W') & 0x8000)
+        ny -= sp;
+
+    if(GetAsyncKeyState('S') & 0x8000)
+        ny += sp;
+
+    if(GetAsyncKeyState('A') & 0x8000)
+        nx -= sp;
+
+    if(GetAsyncKeyState('D') & 0x8000)
+        nx += sp;
+
+    int eNow = GetAsyncKeyState('E') & 0x8000;
+
+	if(eNow && !p.dashKeyOld)
+    	dash();
+
+	p.dashKeyOld = eNow;
+
+    if(nx < 20)
+        nx = 20;
+
+    if(nx > W-20)
+        nx = W-20;
+
+    if(ny < 20)
+        ny = 20;
+
+    if(ny > H-20)
+        ny = H-20;
+
+    if(!hitObs(nx,ny,15)){
+
+        p.x = nx;
+
+        p.y = ny;
+    }
+
+    p.angle = atan2(
+        (float)mousey() - p.y,
+        (float)mousex() - p.x
+    );
+
+    if(GetAsyncKeyState(VK_RBUTTON) & 0x8000)
+        shoot();
+
+    if(p.fireTimer > 0)
+        p.fireTimer--;
+
+    if(p.hp <= 0){
+
+        p.alive = 0;
+
+        saveHighScore();
+
+        gameState = STATE_GAMEOVER;
+    }
+}
+
+
+void updateBullets(){
+
+    for(int i=0;i<MAX_BULLETS;i++){
+
+        if(!bullets[i].active)
+            continue;
+
+        bullets[i].x += bullets[i].vx;
+        bullets[i].y += bullets[i].vy;
+
+        bullets[i].life--;
+
+        if(
+            bullets[i].x < 0 ||
+            bullets[i].x > W ||
+            bullets[i].y < 0 ||
+            bullets[i].y > H ||
+            bullets[i].life <= 0 ||
+            hitObs(bullets[i].x,bullets[i].y,3)
+        ){
+            bullets[i].active = 0;
+            continue;
+        }
+
+        if(
+            boxItem.active &&
+            dist2(
+                bullets[i].x,
+                bullets[i].y,
+                boxItem.x,
+                boxItem.y
+            ) < 25
+        ){
+            bullets[i].active = 0;
+
+            boxItem.hp--;
+
+            if(boxItem.hp <= 0){
+
+                applyBuff(boxItem.buff);
+
+                boxItem.active = 0;
+            }
+
+            continue;
+        }
+
+        for(int j=0;j<MAX_ENEMIES;j++){
+
+            if(
+                enemies[j].active &&
+                dist2(
+                    bullets[i].x,
+                    bullets[i].y,
+                    enemies[j].x,
+                    enemies[j].y
+                ) < (enemies[j].boss ? 42 : 20)
+            ){
+
+                bullets[i].active = 0;
+
+                enemies[j].hp -= 25;
+
+                if(enemies[j].hp <= 0){
+
+                    if(enemies[j].boss){
+
+                        p.score += 100;
+
+                        portal.active = 1;
+
+                        portal.x = W/2;
+                        portal.y = 85;
+                    }
+                    else{
+
+                        if(enemies[j].type >= 10)
+                            p.score += 25;
+                        else
+                            p.score += 10;
+                    }
+
+                    enemies[j].active = 0;
+                }
+
+                break;
+            }
+        }
+    }
+}
+
+
+void bossSkill(Enemy *e){
+
+    if(e->skillCd > 0){
+
+        e->skillCd--;
+
+        return;
+    }
+
+    if(p.map == 1){
+
+        if(dist2(e->x,e->y,p.x,p.y) < 95){
+
+            p.hp -= 18;
+
+            p.slowTimer = 120;
+
+            float a = atan2(
+                p.y - e->y,
+                p.x - e->x
+            );
+
+            p.x += cos(a) * 30;
+            p.y += sin(a) * 30;
+        }
+
+        e->skillCd = 480;
+    }
+
+    if(p.map == 2){
+
+        if(dist2(e->x,e->y,p.x,p.y) < 160){
+
+            p.hp -= 13;
+
+            p.slowTimer = 190;
+        }
+
+        e->skillCd = 600;
+    }
+
+    if(p.map == 3){
+
+        if(rand()%2 == 0){
+
+            p.hp -= 14;
+
+            p.burnTimer = 180;
+        }
+
+        e->skillCd = 720;
+    }
+
+    if(p.map == 4){
+
+        if(rand()%2 == 0)
+            p.slowTimer = 150;
+        else
+            p.burnTimer = 150;
+
+        p.hp -= 12;
+
+        e->skillCd = 540;
+    }
+}
+
+void updateEnemies(){
+
+    for(int i=0;i<MAX_ENEMIES;i++){
+
+        Enemy *e = &enemies[i];
+
+        if(!e->active)
+            continue;
+
+        float dx = p.x - e->x;
+        float dy = p.y - e->y;
+
+        float d = sqrt(dx*dx + dy*dy);
+
+        if(d > 0){
+
+            float nx = e->x + dx/d * e->speed;
+            float ny = e->y + dy/d * e->speed;
+
+            if(hitObs(nx,ny,e->boss ? 34 : 15)){
+
+                nx = e->x - dy/d * e->speed * 0.7f;
+                ny = e->y + dx/d * e->speed * 0.7f;
+            }
+
+            if(!hitObs(nx,ny,e->boss ? 34 : 15)){
+
+                e->x = nx;
+
+                e->y = ny;
+            }
+        }
+
+        if(e->boss)
+            bossSkill(e);
+
+        if(d < (e->boss ? 50 : 25)){
+
+            if(e->atkCd <= 0){
+
+                if(e->boss)
+                    p.hp -= 18;
+                else
+                    p.hp -= 8;
+
+                if(e->type == 2 || e->type == 12)
+                    p.slowTimer = 120;
+
+                if(e->type == 3 || e->type == 13)
+                    p.burnTimer = 150;
+
+                e->atkCd = 42;
+            }
+        }
+
+        if(e->atkCd > 0)
+            e->atkCd--;
+    }
+}
+
+
+void updateSpawn(){
+
+    spawnTimer--;
+
+    if(spawnTimer <= 0){
+
+        int count = 1;
+
+        if(p.map >= 2)
+            count = 2;
+
+        if(p.map == 4)
+            count = 3 + p.score/400;
+
+        for(int i=0;i<count;i++)
+            spawnEnemy(0);
+
+        spawnTimer = 58 - (p.map * 8);
+
+        if(difficulty == DIFF_HARD)
+            spawnTimer -= 10;
+
+        if(spawnTimer < 18)
+            spawnTimer = 18;
+    }
+
+    boxTimer--;
+
+    if(boxTimer <= 0 && !boxItem.active){
+
+        spawnBox();
+
+        boxTimer = 900 + rand()%500;
+    }
+
+    int need = 300;
+
+    if(p.map == 2)
+        need = 600;
+
+    if(p.map == 3)
+        need = 1000;
+
+    if(p.map < 4 && p.score >= need && !bossSpawned){
+
+        spawnEnemy(1);
+
+        bossSpawned = 1;
+    }
+
+    if(
+        p.map == 4 &&
+        p.score > 0 &&
+        p.score % 700 < 15 &&
+        rand()%50 == 0
+    ){
+        spawnEnemy(1);
+    }
+
+    if(
+        portal.active &&
+        dist2(p.x,p.y,portal.x,portal.y) < 40
+    ){
+        if(p.map < 4)
+            setupMap(p.map + 1);
+    }
+}
+
+void updateGame(){
+
+    updatePlayer();
+
+    updateBullets();
+
+    updateEnemies();
+
+    updateSpawn();
+}
+
+
+void drawBackground(){
+
+    if(p.map == 1)
+        setbkcolor(DARKGRAY);
+
+    if(p.map == 2)
+        setbkcolor(CYAN);
+
+    if(p.map == 3)
+        setbkcolor(BLACK);
+
+    if(p.map == 4)
+        setbkcolor(DARKGRAY);
+
+    cleardevice();
+
+    for(int i=0;i<45;i++){
+
+        int x = (i*97)%W;
+        int y = (i*53)%H;
+
+        if(p.map == 1){
+
+            myCircle(x,y,2,LIGHTGRAY);
+
+            myLine(
+                x-12,
+                y+8,
+                x+15,
+                y-5,
+                DARKGRAY
+            );
+        }
+
+        if(p.map == 2){
+
+            myCircle(x,y,3,WHITE);
+
+            myLine(x-5,y,x+5,y,WHITE);
+
+            myLine(x,y-5,x,y+5,WHITE);
+        }
+
+        if(p.map == 3){
+
+            myCircle(x,y,2,RED);
+
+            myLine(
+                x,
+                y,
+                x+8,
+                y+10,
+                LIGHTRED
+            );
+        }
+    }
+
+    if(p.map == 1)
+        drawKoch(2,25,H-80,150,0,GREEN);
+
+    if(p.map == 2)
+        drawKoch(3,35,H-70,160,0,WHITE);
+
+    if(p.map == 3)
+        drawKoch(2,30,H-70,160,0,RED);
+
+    if(p.map == 4){
+
+        drawKoch(2,30,H-70,130,0,GREEN);
+
+        drawKoch(2,230,H-70,130,0,LIGHTCYAN);
+
+        drawKoch(2,430,H-70,130,0,RED);
+    }
+}
+
+
+void drawObs(){
+
+    for(int i=0;i<obsCount;i++){
+
+        int c = BROWN;
+
+        if(obs[i].type == 1)
+            c = LIGHTGRAY;
+
+        if(obs[i].type == 2)
+            c = BROWN;
+
+        if(obs[i].type == 3)
+            c = GREEN;
+
+        if(obs[i].type == 4 || obs[i].type == 5)
+            c = LIGHTCYAN;
+
+        if(obs[i].type == 6 || obs[i].type == 7)
+            c = RED;
+
+        myFillRect(
+            obs[i].x,
+            obs[i].y,
+            obs[i].w,
+            obs[i].h,
+            c
+        );
+
+        myRect(
+            obs[i].x,
+            obs[i].y,
+            obs[i].w,
+            obs[i].h,
+            WHITE
+        );
+
+        if(obs[i].type == 1){
+
+            myLine(
+                obs[i].x,
+                obs[i].y,
+                obs[i].x + obs[i].w,
+                obs[i].y + obs[i].h,
+                BLACK
+            );
+
+            myLine(
+                obs[i].x + obs[i].w,
+                obs[i].y,
+                obs[i].x,
+                obs[i].y + obs[i].h,
+                BLACK
+            );
+        }
+
+        if(obs[i].type == 4){
+
+            myCircle(
+                obs[i].x + obs[i].w/2,
+                obs[i].y + obs[i].h/2,
+                obs[i].h/3,
+                WHITE
+            );
+        }
+
+        if(obs[i].type == 7){
+
+            myCircle(
+                obs[i].x + obs[i].w/2,
+                obs[i].y + obs[i].h/2,
+                obs[i].h/4,
+                LIGHTRED
+            );
+        }
+    }
+}
+
+void drawPlayer(){
+
+    float a = p.angle;
+
+    int x1 = p.x + cos(a)*28;
+    int y1 = p.y + sin(a)*28;
+
+    int x2 = p.x + cos(a+2.45f)*18;
+    int y2 = p.y + sin(a+2.45f)*18;
+
+    int x3 = p.x + cos(a-2.45f)*18;
+    int y3 = p.y + sin(a-2.45f)*18;
+
+    int body = p.dashTimer > 0 ?
+        YELLOW :
+        LIGHTGREEN;
+
+    myCircle((int)p.x,(int)p.y,15,body);
+
+    myLine(x1,y1,x2,y2,WHITE);
+
+    myLine(x2,y2,x3,y3,WHITE);
+
+    myLine(x3,y3,x1,y1,WHITE);
+
+    myLine(
+        (int)p.x,
+        (int)p.y,
+        (int)(p.x + cos(a)*44),
+        (int)(p.y + sin(a)*44),
+        YELLOW
+    );
+
+    myCircle(
+        (int)(p.x + cos(a)*44),
+        (int)(p.y + sin(a)*44),
+        4,
+        YELLOW
+    );
+}
+
+void drawBullets(){
+
+    for(int i=0;i<MAX_BULLETS;i++){
+
+        if(bullets[i].active){
+
+            myLine(
+                (int)(bullets[i].x - bullets[i].vx*0.8f),
+                (int)(bullets[i].y - bullets[i].vy*0.8f),
+                (int)bullets[i].x,
+                (int)bullets[i].y,
+                YELLOW
+            );
+
+            myCircle(
+                (int)bullets[i].x,
+                (int)bullets[i].y,
+                3,
+                WHITE
+            );
+        }
+    }
+}
+
+void drawEnemies(){
+
+    for(int i=0;i<MAX_ENEMIES;i++){
+
+        if(!enemies[i].active)
+            continue;
+
+        Enemy *e = &enemies[i];
+
+        int r = e->boss ? 38 : 16;
+
+        int c = GREEN;
+
+        if(e->type == 2 || e->type == 12)
+            c = LIGHTCYAN;
+
+        if(e->type == 3 || e->type == 13)
+            c = LIGHTRED;
+
+        if(e->type >= 10)
+            c = MAGENTA;
+
+        if(e->boss)
+            c = YELLOW;
+
+        myCircle(
+            (int)e->x,
+            (int)e->y,
+            r,
+            c
+        );
+
+        myCircle(
+            (int)e->x-6,
+            (int)e->y-5,
+            3,
+            RED
+        );
+
+        myCircle(
+            (int)e->x+6,
+            (int)e->y-5,
+            3,
+            RED
+        );
+
+        myLine(
+            (int)e->x-8,
+            (int)e->y+8,
+            (int)e->x+8,
+            (int)e->y+8,
+            WHITE
+        );
+
+        int barW = e->boss ? 90 : 34;
+
+        myRect(
+            (int)e->x-barW/2,
+            (int)e->y-r-14,
+            barW,
+            5,
+            WHITE
+        );
+
+        myFillRect(
+            (int)e->x-barW/2,
+            (int)e->y-r-14,
+            (int)(barW*(float)e->hp/e->maxHp),
+            5,
+            RED
+        );
+    }
+}
+
+void drawBoxPortal(){
+
+    if(boxItem.active){
+
+        myCircle(
+            boxItem.x,
+            boxItem.y,
+            28,
+            LIGHTMAGENTA
+        );
+
+        myRect(
+            boxItem.x-18,
+            boxItem.y-18,
+            36,
+            36,
+            YELLOW
+        );
+    }
+
+    if(portal.active){
+
+        myCircle(
+            portal.x,
+            portal.y,
+            38,
+            LIGHTMAGENTA
+        );
+
+        myCircle(
+            portal.x,
+            portal.y,
+            26,
+            MAGENTA
+        );
+
+        myCircle(
+            portal.x,
+            portal.y,
+            14,
+            WHITE
+        );
+
+        outtextxy(
+            portal.x-35,
+            portal.y-58,
+            (char*)"PORTAL"
+        );
+    }
+}
+
+
+void drawHUD(){
+
+    char s[160];
+
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+
+    myFillRect(20,20,300,35,BLACK);
+    myRect(20,20,300,35,WHITE);
+
+    myFillRect(
+        22,
+        22,
+        (int)(296*p.hp/p.maxHp),
+        31,
+        RED
+    );
+
+    sprintf(s,"HP %.0f / %.0f",p.hp,p.maxHp);
+    outtextxy(30,65,s);
+
+    sprintf(s,"SCORE: %d",p.score);
+    outtextxy(W-300,25,s);
+
+    sprintf(s,"MAP: %d",p.map);
+    outtextxy(W-300,60,s);
+
+    sprintf(s,"BULLET: %d",p.bulletCount);
+    outtextxy(30,H-95,s);
+
+    if(p.dashCd <= 0)
+        sprintf(s,"E DASH: READY");
+    else
+        sprintf(s,"E DASH: %.1fs",p.dashCd/60.0f);
+
+    outtextxy(30,H-60,s);
+
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
+}
+
+void renderGame(){
+
+    setactivepage(page);
+
+    drawBackground();
+
+    drawObs();
+
+    drawBoxPortal();
+
+    drawBullets();
+
+    drawEnemies();
+
+    drawPlayer();
+
+    drawHUD();
+
+    setvisualpage(page);
+
+    page = 1 - page;
+}
