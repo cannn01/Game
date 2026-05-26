@@ -8,7 +8,7 @@
 #include "Draw.h"
 #include "Game.h"
 #include "Menu.h"
-
+#include "Sound.h"
 int mouseIn(int x,int y,int w,int h){
 
     int mx = mousex();
@@ -42,64 +42,49 @@ void renderMenu(){
     setbkcolor(BLACK);
     cleardevice();
 
-    int panelW = 520;
-    int panelH = 520;
+    int panelW = 820;
+    int panelH = 620;
     int px = W/2 - panelW/2;
     int py = H/2 - panelH/2;
 
-    myFillRect(px,py,panelW,panelH,DARKGRAY);
-    myRect(px,py,panelW,panelH,YELLOW);
+    setfillstyle(SOLID_FILL, DARKGRAY);
+    bar(px,py,px+panelW,py+panelH);
+
+    setcolor(YELLOW);
+    rectangle(px,py,px+panelW,py+panelH);
+    rectangle(px+8,py+8,px+panelW-8,py+panelH-8);
 
     settextstyle(DEFAULT_FONT, HORIZ_DIR, 3);
+    drawTextCenter(W/2,py+55,"LAST SURVIVOR",YELLOW);
 
-    drawTextCenter(
-        W/2,
-        py + 45,
-        "LAST SURVIVOR",
-        YELLOW
-    );
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 3);
+    drawTextCenter(W/2,py+105,"ZOMBIE CHAOS",LIGHTRED);
 
-    drawTextCenter(
-        W/2,
-        py + 85,
-        "ZOMBIE CHAOS",
-        LIGHTRED
-    );
+    int bx = W/2 - 230;
+    int by = py + 180;
 
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+    drawButton(bx,by,460,65,"START",mouseIn(bx,by,460,65));
 
-    int bx = W/2 - 160;
-    int by = py + 155;
-
-    drawButton(bx,by,320,55,"START",mouseIn(bx,by,320,55));
-
-    char d[80];
+    char diffText[100];
 
     if(difficulty == DIFF_EASY)
-        strcpy(d,"DIFFICULTY: EASY");
+        sprintf(diffText,"DIFFICULTY EASY");
     else if(difficulty == DIFF_NORMAL)
-        strcpy(d,"DIFFICULTY: NORMAL");
+        sprintf(diffText,"DIFFICULTY NORMAL");
     else
-        strcpy(d,"DIFFICULTY: HARD");
+        sprintf(diffText,"DIFFICULTY HARD");
 
-    drawButton(bx,by+80,320,55,d,mouseIn(bx,by+80,320,55));
+    drawButton(bx,by+90,460,65,diffText,mouseIn(bx,by+90,460,65));
 
-    char m[80];
+    char musicText[100];
+    sprintf(musicText,"MUSIC %s",musicOn ? "ON" : "OFF");
 
-    sprintf(m,"MUSIC: %s",musicOn ? "ON" : "OFF");
+    drawButton(bx,by+180,460,65,musicText,mouseIn(bx,by+180,460,65));
 
-    drawButton(bx,by+160,320,55,m,mouseIn(bx,by+160,320,55));
-
-    drawButton(bx,by+240,320,55,"EXIT",mouseIn(bx,by+240,320,55));
+    drawButton(bx,by+270,460,65,"EXIT",mouseIn(bx,by+270,460,65));
 
     settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
-
-    drawTextCenter(
-        W/2,
-        py + panelH - 45,
-        "WASD MOVE | RIGHT MOUSE SHOOT | E DASH | ESC PAUSE",
-        WHITE
-    );
+    drawTextCenter(W/2,py+panelH-45,"WASD MOVE | RIGHT MOUSE SHOOT | E DASH | ESC PAUSE",WHITE);
 
     setvisualpage(page);
     page = 1-page;
@@ -107,38 +92,37 @@ void renderMenu(){
 
 void updateMenu(){
 
-    int panelH = 520;
+    int panelH = 620;
     int py = H/2 - panelH/2;
 
-    int bx = W/2 - 160;
-    int by = py + 155;
+    int bx = W/2 - 230;
+    int by = py + 180;
 
     if(leftClick()){
 
-        if(mouseIn(bx,by,320,55)){
-
+        if(mouseIn(bx,by,460,65)){
             resetGame();
-
+            playMapMusic(1);
             gameState = STATE_PLAY;
         }
 
-        else if(mouseIn(bx,by+80,320,55)){
-
+        else if(mouseIn(bx,by+90,460,65)){
             difficulty++;
-
             if(difficulty > DIFF_HARD)
                 difficulty = DIFF_EASY;
         }
 
-        else if(mouseIn(bx,by+160,320,55)){
-
+        else if(mouseIn(bx,by+180,460,65)){
             musicOn = !musicOn;
+
+            if(!musicOn)
+                stopMusic();
+            else
+                playMenuMusic();
         }
 
-        else if(mouseIn(bx,by+240,320,55)){
-
+        else if(mouseIn(bx,by+270,460,65)){
             closegraph();
-
             exit(0);
         }
     }

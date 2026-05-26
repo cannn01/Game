@@ -4,9 +4,9 @@
 CPP      = g++.exe
 CC       = gcc.exe
 WINDRES  = windres.exe
-OBJ      = Globals.o Draw.o Game.o Menu.o main.o
-LINKOBJ  = Globals.o Draw.o Game.o Menu.o main.o
-LIBS     = -L"D:/Dev-Cpp/MinGW32/lib" -static-libstdc++ -static-libgcc -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 
+OBJ      = Globals.o Draw.o Game.o Menu.o main.o Sound.o
+LINKOBJ  = Globals.o Draw.o Game.o Menu.o main.o Sound.o
+LIBS     = -L"D:/Dev-Cpp/MinGW32/lib" -static-libstdc++ -static-libgcc -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 -lwinmm 
 INCS     = -I"D:/Dev-Cpp/MinGW32/include"
 CXXINCS  = -I"D:/Dev-Cpp/MinGW32/include"
 BIN      = Song_Sot_Giua_Vong_Vay.exe
@@ -39,3 +39,6 @@ Menu.o: Menu.cpp
 
 main.o: main.cpp
 	$(CPP) -c main.cpp -o main.o $(CXXFLAGS)
+
+Sound.o: Sound.cpp
+	$(CPP) -c Sound.cpp -o Sound.o $(CXXFLAGS)

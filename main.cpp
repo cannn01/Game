@@ -5,11 +5,11 @@
 #include "Globals.h"
 #include "Game.h"
 #include "Menu.h"
-
+#include "Sound.h"
 int main(){
 
     initGameSystem();
-
+	playMenuMusic();
     static int oldEsc = 0;
 
     while(true){

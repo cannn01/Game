@@ -11,7 +11,7 @@ ResourceIncludes=
 MakeIncludes=
 Compiler=
 CppCompiler=
-Linker=-lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32_@@_
+Linker=-lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 -lwinmm_@@_
 IsCpp=1
 Icon=
 ExeOutput=
@@ -29,7 +29,7 @@ IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=0
 CompilerSettings=0000000000000000000000000
-UnitCount=11
+UnitCount=13
 
 [VersionInfo]
 Major=1
@@ -152,6 +152,26 @@ BuildCmd=
 
 [Unit2]
 FileName=Types.h
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit12]
+FileName=Sound.h
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit13]
+FileName=Sound.cpp
 CompileCpp=1
 Folder=
 Compile=1

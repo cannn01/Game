@@ -10,6 +10,7 @@
 #include "Globals.h"
 #include "Draw.h"
 #include "Game.h"
+#include "Sound.h"
 
 float dist2(float x1,float y1,float x2,float y2){
 
@@ -167,6 +168,7 @@ void setupMap(int map){
 
         addObs(760,540,160,80,3);
     }
+    playMapMusic(map);
 }
 
 
@@ -407,14 +409,10 @@ void dash(){
     if(p.dashCd > 0)
         return;
 
-    float a = atan2(
-        (float)mousey() - p.y,
-        (float)mousex() - p.x
-    );
+    float a = atan2((float)mousey() - p.y, (float)mousex() - p.x);
 
-    float step = 18;
-    float dashDistance = 150;
-
+    float dashDistance = 420;
+    float step = 25;
     float moved = 0;
 
     while(moved < dashDistance){
@@ -422,10 +420,10 @@ void dash(){
         float nx = p.x + cos(a) * step;
         float ny = p.y + sin(a) * step;
 
-        if(nx < 25 || nx > W-25 || ny < 25 || ny > H-25)
+        if(nx < 35 || nx > W-35 || ny < 35 || ny > H-35)
             break;
 
-        if(hitObs(nx,ny,15))
+        if(hitObs(nx,ny,18))
             break;
 
         p.x = nx;
@@ -435,7 +433,7 @@ void dash(){
     }
 
     p.dashCd = 180;
-    p.dashTimer = 16;
+    p.dashTimer = 28;
 }
 
 
@@ -444,83 +442,55 @@ void updatePlayer(){
     float sp = p.speed;
 
     if(p.slowTimer > 0){
-
         sp *= 0.55f;
-
         p.slowTimer--;
     }
 
     if(p.burnTimer > 0){
-
         p.hp -= 0.08f;
-
         p.burnTimer--;
     }
 
-    if(p.dashCd > 0)
-        p.dashCd--;
-
-    if(p.dashTimer > 0)
-        p.dashTimer--;
+    if(p.dashCd > 0) p.dashCd--;
+    if(p.dashTimer > 0) p.dashTimer--;
 
     float nx = p.x;
     float ny = p.y;
 
-    if(GetAsyncKeyState('W') & 0x8000)
-        ny -= sp;
+    if(GetAsyncKeyState('W') & 0x8000) ny -= sp;
+    if(GetAsyncKeyState('S') & 0x8000) ny += sp;
+    if(GetAsyncKeyState('A') & 0x8000) nx -= sp;
+    if(GetAsyncKeyState('D') & 0x8000) nx += sp;
 
-    if(GetAsyncKeyState('S') & 0x8000)
-        ny += sp;
-
-    if(GetAsyncKeyState('A') & 0x8000)
-        nx -= sp;
-
-    if(GetAsyncKeyState('D') & 0x8000)
-        nx += sp;
-
-    int eNow = GetAsyncKeyState('E') & 0x8000;
-
-	if(eNow && !p.dashKeyOld)
-    	dash();
-
-	p.dashKeyOld = eNow;
-
-    if(nx < 20)
-        nx = 20;
-
-    if(nx > W-20)
-        nx = W-20;
-
-    if(ny < 20)
-        ny = 20;
-
-    if(ny > H-20)
-        ny = H-20;
+    if(nx < 20) nx = 20;
+    if(nx > W-20) nx = W-20;
+    if(ny < 20) ny = 20;
+    if(ny > H-20) ny = H-20;
 
     if(!hitObs(nx,ny,15)){
-
         p.x = nx;
-
         p.y = ny;
     }
 
-    p.angle = atan2(
-        (float)mousey() - p.y,
-        (float)mousex() - p.x
-    );
+    p.angle = atan2((float)mousey() - p.y, (float)mousex() - p.x);
 
-    if(GetAsyncKeyState(VK_RBUTTON) & 0x8000)
-        shoot();
+	if(GetAsyncKeyState(VK_RBUTTON) & 0x8000){
+    shoot();
+}
 
-    if(p.fireTimer > 0)
-        p.fireTimer--;
+    int eNow = GetAsyncKeyState('E') & 0x8000;
+
+    if(eNow && !p.dashKeyOld){
+        dash();
+    }
+
+    p.dashKeyOld = eNow;
+
+    if(p.fireTimer > 0) p.fireTimer--;
 
     if(p.hp <= 0){
-
         p.alive = 0;
-
         saveHighScore();
-
         gameState = STATE_GAMEOVER;
     }
 }
@@ -984,41 +954,51 @@ void drawPlayer(){
 
     float a = p.angle;
 
-    int x1 = p.x + cos(a)*28;
-    int y1 = p.y + sin(a)*28;
+    int cx = (int)p.x;
+    int cy = (int)p.y;
 
-    int x2 = p.x + cos(a+2.45f)*18;
-    int y2 = p.y + sin(a+2.45f)*18;
+    int bodyColor = p.dashTimer > 0 ? YELLOW : LIGHTGREEN;
 
-    int x3 = p.x + cos(a-2.45f)*18;
-    int y3 = p.y + sin(a-2.45f)*18;
+    setfillstyle(SOLID_FILL, bodyColor);
+    fillellipse(cx,cy,16,22);
 
-    int body = p.dashTimer > 0 ?
-        YELLOW :
-        LIGHTGREEN;
+    setcolor(WHITE);
+    ellipse(cx,cy,0,360,16,22);
 
-    myCircle((int)p.x,(int)p.y,15,body);
-
-    myLine(x1,y1,x2,y2,WHITE);
-
-    myLine(x2,y2,x3,y3,WHITE);
-
-    myLine(x3,y3,x1,y1,WHITE);
-
-    myLine(
-        (int)p.x,
-        (int)p.y,
-        (int)(p.x + cos(a)*44),
-        (int)(p.y + sin(a)*44),
-        YELLOW
+    setfillstyle(SOLID_FILL, LIGHTGRAY);
+    fillellipse(
+        cx + (int)(cos(a)*10),
+        cy + (int)(sin(a)*10),
+        9,
+        9
     );
 
-    myCircle(
-        (int)(p.x + cos(a)*44),
-        (int)(p.y + sin(a)*44),
-        4,
-        YELLOW
-    );
+    int gunX1 = cx + cos(a)*12;
+    int gunY1 = cy + sin(a)*12;
+    int gunX2 = cx + cos(a)*55;
+    int gunY2 = cy + sin(a)*55;
+
+    setcolor(YELLOW);
+    setlinestyle(SOLID_LINE,0,THICK_WIDTH);
+    line(gunX1,gunY1,gunX2,gunY2);
+
+    setcolor(WHITE);
+    setlinestyle(SOLID_LINE,0,NORM_WIDTH);
+
+    myCircle(gunX2,gunY2,5,YELLOW);
+
+    if(p.dashTimer > 0){
+
+        setcolor(LIGHTCYAN);
+
+        for(int i=1;i<=4;i++){
+
+            int tx = cx - cos(a)*i*18;
+            int ty = cy - sin(a)*i*18;
+
+            circle(tx,ty,8);
+        }
+    }
 }
 
 void drawBullets(){
@@ -1054,68 +1034,72 @@ void drawEnemies(){
 
         Enemy *e = &enemies[i];
 
-        int r = e->boss ? 38 : 16;
+        int cx = (int)e->x;
+        int cy = (int)e->y;
 
-        int c = GREEN;
+        int r = e->boss ? 42 : 18;
+
+        int bodyColor = GREEN;
 
         if(e->type == 2 || e->type == 12)
-            c = LIGHTCYAN;
+            bodyColor = LIGHTCYAN;
 
         if(e->type == 3 || e->type == 13)
-            c = LIGHTRED;
+            bodyColor = LIGHTRED;
 
         if(e->type >= 10)
-            c = MAGENTA;
+            bodyColor = MAGENTA;
 
         if(e->boss)
-            c = YELLOW;
+            bodyColor = BROWN;
 
-        myCircle(
-            (int)e->x,
-            (int)e->y,
-            r,
-            c
+        setfillstyle(SOLID_FILL, bodyColor);
+        fillellipse(cx,cy,r,r+6);
+
+        setcolor(WHITE);
+        ellipse(cx,cy,0,360,r,r+6);
+
+        setfillstyle(SOLID_FILL, RED);
+        fillellipse(cx-7,cy-8,4,4);
+        fillellipse(cx+7,cy-8,4,4);
+
+        setcolor(BLACK);
+        line(cx-8,cy+8,cx+8,cy+8);
+
+        setcolor(bodyColor);
+        line(cx-r,cy,cx-r-16,cy+12);
+        line(cx+r,cy,cx+r+16,cy+12);
+
+        if(e->type == 2 || e->type == 12){
+
+            setcolor(WHITE);
+            line(cx-r,cy-r,cx+r,cy+r);
+            line(cx+r,cy-r,cx-r,cy+r);
+        }
+
+        if(e->type == 3 || e->type == 13){
+
+            setcolor(YELLOW);
+            line(cx,cy-r-5,cx-8,cy-r-20);
+            line(cx-8,cy-r-20,cx+8,cy-r-12);
+            line(cx+8,cy-r-12,cx,cy-r-5);
+        }
+
+        int barW = e->boss ? 130 : 45;
+
+        setfillstyle(SOLID_FILL, BLACK);
+        bar(cx-barW/2,cy-r-25,cx+barW/2,cy-r-15);
+
+        setfillstyle(SOLID_FILL, RED);
+        bar(
+            cx-barW/2,
+            cy-r-25,
+            cx-barW/2 + (int)(barW*(float)e->hp/e->maxHp),
+            cy-r-15
         );
 
-        myCircle(
-            (int)e->x-6,
-            (int)e->y-5,
-            3,
-            RED
-        );
-
-        myCircle(
-            (int)e->x+6,
-            (int)e->y-5,
-            3,
-            RED
-        );
-
-        myLine(
-            (int)e->x-8,
-            (int)e->y+8,
-            (int)e->x+8,
-            (int)e->y+8,
-            WHITE
-        );
-
-        int barW = e->boss ? 90 : 34;
-
-        myRect(
-            (int)e->x-barW/2,
-            (int)e->y-r-14,
-            barW,
-            5,
-            WHITE
-        );
-
-        myFillRect(
-            (int)e->x-barW/2,
-            (int)e->y-r-14,
-            (int)(barW*(float)e->hp/e->maxHp),
-            5,
-            RED
-        );
+        setcolor(WHITE);
+        rectangle(cx-barW/2,cy-r-25,cx+barW/2,cy-r-15);
     }
 }
 
@@ -1175,37 +1159,50 @@ void drawHUD(){
 
     char s[160];
 
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 3);
 
-    myFillRect(20,20,300,35,BLACK);
-    myRect(20,20,300,35,WHITE);
+    setfillstyle(SOLID_FILL, BLACK);
+    bar(15,15,390,150);
 
-    myFillRect(
-        22,
-        22,
-        (int)(296*p.hp/p.maxHp),
-        31,
-        RED
-    );
+    setcolor(WHITE);
+    rectangle(15,15,390,150);
+
+    setfillstyle(SOLID_FILL, RED);
+    bar(35,35,35 + (int)(300*p.hp/p.maxHp),65);
+
+    setcolor(WHITE);
+    rectangle(35,35,335,65);
 
     sprintf(s,"HP %.0f / %.0f",p.hp,p.maxHp);
-    outtextxy(30,65,s);
+    outtextxy(35,80,s);
 
-    sprintf(s,"SCORE: %d",p.score);
-    outtextxy(W-300,25,s);
+    setfillstyle(SOLID_FILL, BLACK);
+    bar(W-390,15,W-20,145);
 
-    sprintf(s,"MAP: %d",p.map);
-    outtextxy(W-300,60,s);
+    setcolor(WHITE);
+    rectangle(W-390,15,W-20,145);
 
-    sprintf(s,"BULLET: %d",p.bulletCount);
-    outtextxy(30,H-95,s);
+    sprintf(s,"SCORE %d",p.score);
+    outtextxy(W-360,35,s);
+
+    sprintf(s,"MAP %d",p.map);
+    outtextxy(W-360,80,s);
+
+    setfillstyle(SOLID_FILL, BLACK);
+    bar(15,H-160,430,H-20);
+
+    setcolor(WHITE);
+    rectangle(15,H-160,430,H-20);
+
+    sprintf(s,"BULLET %d",p.bulletCount);
+    outtextxy(35,H-135,s);
 
     if(p.dashCd <= 0)
-        sprintf(s,"E DASH: READY");
+        sprintf(s,"E DASH READY");
     else
-        sprintf(s,"E DASH: %.1fs",p.dashCd/60.0f);
+        sprintf(s,"E DASH %.1fs",p.dashCd/60.0f);
 
-    outtextxy(30,H-60,s);
+    outtextxy(35,H-90,s);
 
     settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
 }

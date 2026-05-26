@@ -142,18 +142,19 @@ void drawButton(int x,int y,int w,int h,const char *text,int hover){
     int border = hover ? YELLOW : WHITE;
     int fill = hover ? BLUE : BLACK;
 
-    myFillRect(x,y,w,h,fill);
+    setfillstyle(SOLID_FILL, fill);
+    bar(x,y,x+w,y+h);
 
-    myRect(x,y,w,h,border);
-    myRect(x+3,y+3,w-6,h-6,border);
+    setcolor(border);
+    rectangle(x,y,x+w,y+h);
+    rectangle(x+4,y+4,x+w-4,y+h-4);
 
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 3);
 
-    drawTextCenter(
-        x+w/2,
-        y+h/2-8,
-        text,
-        border
+    outtextxy(
+        x + w/2 - textwidth((char*)text)/2,
+        y + h/2 - textheight((char*)text)/2,
+        (char*)text
     );
 
     settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
