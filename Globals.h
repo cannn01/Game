@@ -22,5 +22,6 @@ extern int obsCount;
 extern int bossSpawned;
 extern float spawnTimer;
 extern float boxTimer;
-
+extern Effect effects[MAX_EFFECTS];
+extern int gameTick;
 #endif

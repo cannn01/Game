@@ -59,5 +59,13 @@ struct Player {
     int shootKeyOld;
 	int mouseShootOld;
 };
-
+struct Effect {
+    int active;
+    int type;
+    float x, y;
+    float vx, vy;
+    float life, maxLife;
+    int color;
+    int size;
+};
 #endif

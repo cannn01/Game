@@ -4,7 +4,7 @@
 #define MAX_BULLETS 260
 #define MAX_ENEMIES 120
 #define MAX_OBS 40
-
+#define MAX_EFFECTS 300
 #define PI 3.14159265f
 
 enum GameState {

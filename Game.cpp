@@ -12,6 +12,8 @@
 #include "Game.h"
 #include "Sound.h"
 
+void spawnBuffGlow(float x,float y);
+void spawnBlood(float x,float y);
 float dist2(float x1,float y1,float x2,float y2){
 
     float dx = x1 - x2;
@@ -76,7 +78,9 @@ void clearArrays(){
 
     for(int i=0;i<MAX_ENEMIES;i++)
         enemies[i].active = 0;
-
+        
+	for(int i=0;i<MAX_EFFECTS;i++)
+    	effects[i].active = 0;
     boxItem.active = 0;
 
     portal.active = 0;
@@ -404,6 +408,7 @@ void applyBuff(int type){
         if(p.speed > 6.2f)
             p.speed = 6.2f;
     }
+    spawnBuffGlow(p.x,p.y);
 }
 
 
@@ -459,6 +464,91 @@ void handleShootInput(){
 
     p.mouseShootOld = mouseNow;
     p.shootKeyOld = spaceNow;
+}
+void addEffect(int type,float x,float y,int color,int size){
+
+    for(int i=0;i<MAX_EFFECTS;i++){
+
+        if(!effects[i].active){
+
+            effects[i].active = 1;
+            effects[i].type = type;
+            effects[i].x = x;
+            effects[i].y = y;
+
+            effects[i].vx = (rand()%100 - 50) / 25.0f;
+            effects[i].vy = (rand()%100 - 50) / 25.0f;
+
+            effects[i].life = 35 + rand()%25;
+            effects[i].maxLife = effects[i].life;
+
+            effects[i].color = color;
+            effects[i].size = size;
+
+            return;
+        }
+    }
+}
+
+void spawnBlood(float x,float y){
+
+    for(int i=0;i<12;i++)
+        addEffect(1,x,y,RED,3 + rand()%4);
+}
+
+void spawnBuffGlow(float x,float y){
+
+    for(int i=0;i<18;i++)
+        addEffect(2,x,y,LIGHTMAGENTA,4 + rand()%5);
+}
+
+void updateEffects(){
+
+    for(int i=0;i<MAX_EFFECTS;i++){
+
+        if(!effects[i].active)
+            continue;
+
+        effects[i].x += effects[i].vx;
+        effects[i].y += effects[i].vy;
+
+        effects[i].life--;
+
+        if(effects[i].life <= 0)
+            effects[i].active = 0;
+    }
+}
+
+void drawEffects(){
+
+    for(int i=0;i<MAX_EFFECTS;i++){
+
+        if(!effects[i].active)
+            continue;
+
+        int s = effects[i].size;
+
+        if(effects[i].type == 1){
+
+            setfillstyle(SOLID_FILL,effects[i].color);
+            fillellipse(
+                (int)effects[i].x,
+                (int)effects[i].y,
+                s,
+                s
+            );
+        }
+
+        if(effects[i].type == 2){
+
+            myCircle(
+                (int)effects[i].x,
+                (int)effects[i].y,
+                s,
+                effects[i].color
+            );
+        }
+    }
 }
 
 void updatePlayer(){
@@ -601,7 +691,7 @@ void updateBullets(){
                 bullets[i].active = 0;
 
                 enemies[j].hp -= 25;
-
+				spawnBlood(enemies[j].x,enemies[j].y);
                 if(enemies[j].hp <= 0){
 
                     if(enemies[j].boss){
@@ -828,6 +918,8 @@ void updateSpawn(){
 
 void updateGame(){
 
+    gameTick++;
+
     updatePlayer();
 
     updateBullets();
@@ -835,6 +927,8 @@ void updateGame(){
     updateEnemies();
 
     updateSpawn();
+
+    updateEffects();
 }
 
 
@@ -996,50 +1090,57 @@ void drawObs(){
 void drawPlayer(){
 
     float a = p.angle;
-
     int cx = (int)p.x;
     int cy = (int)p.y;
 
     int bodyColor = p.dashTimer > 0 ? YELLOW : LIGHTGREEN;
 
-    setfillstyle(SOLID_FILL, bodyColor);
-    fillellipse(cx,cy,16,22);
+    setfillstyle(SOLID_FILL,bodyColor);
+    fillellipse(cx,cy,18,23);
 
     setcolor(WHITE);
-    ellipse(cx,cy,0,360,16,22);
+    ellipse(cx,cy,0,360,18,23);
 
-    setfillstyle(SOLID_FILL, LIGHTGRAY);
-    fillellipse(
-        cx + (int)(cos(a)*10),
-        cy + (int)(sin(a)*10),
-        9,
-        9
-    );
+    int headX = cx + cos(a)*9;
+    int headY = cy + sin(a)*9;
 
-    int gunX1 = cx + cos(a)*12;
-    int gunY1 = cy + sin(a)*12;
-    int gunX2 = cx + cos(a)*55;
-    int gunY2 = cy + sin(a)*55;
+    setfillstyle(SOLID_FILL,LIGHTGRAY);
+    fillellipse(headX,headY,10,10);
+
+    setcolor(BLACK);
+    line(headX-3,headY-2,headX+3,headY-2);
+
+    int arm1x = cx + cos(a+1.5f)*18;
+    int arm1y = cy + sin(a+1.5f)*18;
+
+    int arm2x = cx + cos(a-1.5f)*18;
+    int arm2y = cy + sin(a-1.5f)*18;
+
+    setcolor(WHITE);
+    line(cx,cy,arm1x,arm1y);
+    line(cx,cy,arm2x,arm2y);
+
+    int gunX1 = cx + cos(a)*15;
+    int gunY1 = cy + sin(a)*15;
+
+    int gunX2 = cx + cos(a)*65;
+    int gunY2 = cy + sin(a)*65;
 
     setcolor(YELLOW);
     setlinestyle(SOLID_LINE,0,THICK_WIDTH);
     line(gunX1,gunY1,gunX2,gunY2);
 
-    setcolor(WHITE);
     setlinestyle(SOLID_LINE,0,NORM_WIDTH);
-
     myCircle(gunX2,gunY2,5,YELLOW);
 
     if(p.dashTimer > 0){
 
-        setcolor(LIGHTCYAN);
+        for(int i=1;i<=6;i++){
 
-        for(int i=1;i<=4;i++){
+            int tx = cx - cos(a)*i*20;
+            int ty = cy - sin(a)*i*20;
 
-            int tx = cx - cos(a)*i*18;
-            int ty = cy - sin(a)*i*18;
-
-            circle(tx,ty,8);
+            myCircle(tx,ty,8,LIGHTCYAN);
         }
     }
 }
@@ -1080,7 +1181,7 @@ void drawEnemies(){
         int cx = (int)e->x;
         int cy = (int)e->y;
 
-        int r = e->boss ? 42 : 18;
+        int r = e->boss ? 46 : 20;
 
         int bodyColor = GREEN;
 
@@ -1096,53 +1197,69 @@ void drawEnemies(){
         if(e->boss)
             bodyColor = BROWN;
 
-        setfillstyle(SOLID_FILL, bodyColor);
-        fillellipse(cx,cy,r,r+6);
+        int walk = (int)(sin((gameTick+i)*0.18f)*5);
+
+        setfillstyle(SOLID_FILL,bodyColor);
+        fillellipse(cx,cy,r,r+8);
 
         setcolor(WHITE);
-        ellipse(cx,cy,0,360,r,r+6);
+        ellipse(cx,cy,0,360,r,r+8);
 
-        setfillstyle(SOLID_FILL, RED);
+        setfillstyle(SOLID_FILL,RED);
         fillellipse(cx-7,cy-8,4,4);
         fillellipse(cx+7,cy-8,4,4);
 
         setcolor(BLACK);
-        line(cx-8,cy+8,cx+8,cy+8);
+        line(cx-8,cy+9,cx+8,cy+9);
 
         setcolor(bodyColor);
-        line(cx-r,cy,cx-r-16,cy+12);
-        line(cx+r,cy,cx+r+16,cy+12);
+        line(cx-r,cy,cx-r-18,cy+12+walk);
+        line(cx+r,cy,cx+r+18,cy+12-walk);
+
+        line(cx-8,cy+r,cx-18,cy+r+18+walk);
+        line(cx+8,cy+r,cx+18,cy+r+18-walk);
 
         if(e->type == 2 || e->type == 12){
 
             setcolor(WHITE);
-            line(cx-r,cy-r,cx+r,cy+r);
-            line(cx+r,cy-r,cx-r,cy+r);
+            myLine(cx-r,cy-r,cx+r,cy+r,WHITE);
+            myLine(cx+r,cy-r,cx-r,cy+r,WHITE);
+            myCircle(cx,cy,r+5,LIGHTCYAN);
         }
 
         if(e->type == 3 || e->type == 13){
 
             setcolor(YELLOW);
-            line(cx,cy-r-5,cx-8,cy-r-20);
-            line(cx-8,cy-r-20,cx+8,cy-r-12);
-            line(cx+8,cy-r-12,cx,cy-r-5);
+            line(cx,cy-r-5,cx-8,cy-r-24);
+            line(cx-8,cy-r-24,cx+10,cy-r-15);
+            line(cx+10,cy-r-15,cx,cy-r-5);
+
+            myCircle(cx,cy,r+6,RED);
         }
 
-        int barW = e->boss ? 130 : 45;
+        if(e->boss){
 
-        setfillstyle(SOLID_FILL, BLACK);
-        bar(cx-barW/2,cy-r-25,cx+barW/2,cy-r-15);
+            setcolor(YELLOW);
+            myCircle(cx,cy,r+10,YELLOW);
+            line(cx-r,cy-r,cx-r-20,cy-r-20);
+            line(cx+r,cy-r,cx+r+20,cy-r-20);
+        }
 
-        setfillstyle(SOLID_FILL, RED);
+        int barW = e->boss ? 150 : 50;
+
+        setfillstyle(SOLID_FILL,BLACK);
+        bar(cx-barW/2,cy-r-28,cx+barW/2,cy-r-16);
+
+        setfillstyle(SOLID_FILL,RED);
         bar(
             cx-barW/2,
-            cy-r-25,
+            cy-r-28,
             cx-barW/2 + (int)(barW*(float)e->hp/e->maxHp),
-            cy-r-15
+            cy-r-16
         );
 
         setcolor(WHITE);
-        rectangle(cx-barW/2,cy-r-25,cx+barW/2,cy-r-15);
+        rectangle(cx-barW/2,cy-r-28,cx+barW/2,cy-r-16);
     }
 }
 
@@ -1150,50 +1267,31 @@ void drawBoxPortal(){
 
     if(boxItem.active){
 
-        myCircle(
-            boxItem.x,
-            boxItem.y,
-            28,
-            LIGHTMAGENTA
-        );
+        int glow = 28 + (gameTick%20);
 
-        myRect(
-            boxItem.x-18,
-            boxItem.y-18,
-            36,
-            36,
-            YELLOW
-        );
+        myCircle(boxItem.x,boxItem.y,glow,LIGHTMAGENTA);
+
+        setfillstyle(SOLID_FILL,BROWN);
+        bar(boxItem.x-22,boxItem.y-22,boxItem.x+22,boxItem.y+22);
+
+        setcolor(YELLOW);
+        rectangle(boxItem.x-22,boxItem.y-22,boxItem.x+22,boxItem.y+22);
+
+        line(boxItem.x-22,boxItem.y,boxItem.x+22,boxItem.y);
+        line(boxItem.x,boxItem.y-22,boxItem.x,boxItem.y+22);
     }
 
     if(portal.active){
 
-        myCircle(
-            portal.x,
-            portal.y,
-            38,
-            LIGHTMAGENTA
-        );
+        int r = 35 + (gameTick%15);
 
-        myCircle(
-            portal.x,
-            portal.y,
-            26,
-            MAGENTA
-        );
+        myCircle(portal.x,portal.y,r,LIGHTMAGENTA);
+        myCircle(portal.x,portal.y,r-10,MAGENTA);
+        myCircle(portal.x,portal.y,r-20,WHITE);
 
-        myCircle(
-            portal.x,
-            portal.y,
-            14,
-            WHITE
-        );
-
-        outtextxy(
-            portal.x-35,
-            portal.y-58,
-            (char*)"PORTAL"
-        );
+        settextstyle(DEFAULT_FONT,HORIZ_DIR,2);
+        outtextxy(portal.x-45,portal.y-70,(char*)"PORTAL");
+        settextstyle(DEFAULT_FONT,HORIZ_DIR,1);
     }
 }
 
@@ -1250,6 +1348,44 @@ void drawHUD(){
     settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
 }
 
+void drawBossSkillWarning(){
+
+    for(int i=0;i<MAX_ENEMIES;i++){
+
+        if(!enemies[i].active || !enemies[i].boss)
+            continue;
+
+        Enemy *e = &enemies[i];
+
+        if(e->skillCd < 60){
+
+            if(p.map == 1){
+
+                myCircle((int)e->x,(int)e->y,95,RED);
+                myCircle((int)e->x,(int)e->y,75,LIGHTRED);
+            }
+
+            if(p.map == 2){
+
+                myCircle((int)e->x,(int)e->y,160,LIGHTCYAN);
+                myCircle((int)e->x,(int)e->y,120,WHITE);
+            }
+
+            if(p.map == 3){
+
+                myCircle((int)p.x,(int)p.y,60,RED);
+                myLine(p.x-60,p.y,p.x+60,p.y,RED);
+                myLine(p.x,p.y-60,p.x,p.y+60,RED);
+            }
+
+            if(p.map == 4){
+
+                myCircle((int)e->x,(int)e->y,130,MAGENTA);
+            }
+        }
+    }
+}
+
 void renderGame(){
 
     setactivepage(page);
@@ -1260,9 +1396,13 @@ void renderGame(){
 
     drawBoxPortal();
 
+    drawEffects();
+
     drawBullets();
 
     drawEnemies();
+
+    drawBossSkillWarning();
 
     drawPlayer();
 

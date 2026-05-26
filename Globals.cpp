@@ -21,3 +21,5 @@ int obsCount = 0;
 int bossSpawned = 0;
 float spawnTimer = 0;
 float boxTimer = 0;
+Effect effects[MAX_EFFECTS];
+int gameTick = 0;
