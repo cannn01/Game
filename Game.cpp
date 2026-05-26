@@ -217,6 +217,9 @@ void resetGame(){
     
     p.dashKeyOld = 0;
 
+	p.shootKeyOld = 0;
+
+	p.mouseShootOld = 0;
     setupMap(1);
 }
 
@@ -436,6 +439,27 @@ void dash(){
     p.dashTimer = 28;
 }
 
+void handleShootInput(){
+
+    int mouseNow = 0;
+    int spaceNow = 0;
+
+    if(GetAsyncKeyState(VK_LBUTTON) & 0x8000)
+        mouseNow = 1;
+
+    if(GetAsyncKeyState(VK_RBUTTON) & 0x8000)
+        mouseNow = 1;
+
+    if(GetAsyncKeyState(VK_SPACE) & 0x8000)
+        spaceNow = 1;
+
+    if(mouseNow || spaceNow){
+        shoot();
+    }
+
+    p.mouseShootOld = mouseNow;
+    p.shootKeyOld = spaceNow;
+}
 
 void updatePlayer(){
 
@@ -451,32 +475,18 @@ void updatePlayer(){
         p.burnTimer--;
     }
 
-    if(p.dashCd > 0) p.dashCd--;
-    if(p.dashTimer > 0) p.dashTimer--;
+    if(p.dashCd > 0)
+        p.dashCd--;
 
-    float nx = p.x;
-    float ny = p.y;
+    if(p.dashTimer > 0)
+        p.dashTimer--;
 
-    if(GetAsyncKeyState('W') & 0x8000) ny -= sp;
-    if(GetAsyncKeyState('S') & 0x8000) ny += sp;
-    if(GetAsyncKeyState('A') & 0x8000) nx -= sp;
-    if(GetAsyncKeyState('D') & 0x8000) nx += sp;
+    p.angle = atan2(
+        (float)mousey() - p.y,
+        (float)mousex() - p.x
+    );
 
-    if(nx < 20) nx = 20;
-    if(nx > W-20) nx = W-20;
-    if(ny < 20) ny = 20;
-    if(ny > H-20) ny = H-20;
-
-    if(!hitObs(nx,ny,15)){
-        p.x = nx;
-        p.y = ny;
-    }
-
-    p.angle = atan2((float)mousey() - p.y, (float)mousex() - p.x);
-
-	if(GetAsyncKeyState(VK_RBUTTON) & 0x8000){
-    shoot();
-}
+    handleShootInput();
 
     int eNow = GetAsyncKeyState('E') & 0x8000;
 
@@ -486,7 +496,40 @@ void updatePlayer(){
 
     p.dashKeyOld = eNow;
 
-    if(p.fireTimer > 0) p.fireTimer--;
+    float nx = p.x;
+    float ny = p.y;
+
+    if(GetAsyncKeyState('W') & 0x8000)
+        ny -= sp;
+
+    if(GetAsyncKeyState('S') & 0x8000)
+        ny += sp;
+
+    if(GetAsyncKeyState('A') & 0x8000)
+        nx -= sp;
+
+    if(GetAsyncKeyState('D') & 0x8000)
+        nx += sp;
+
+    if(nx < 20)
+        nx = 20;
+
+    if(nx > W-20)
+        nx = W-20;
+
+    if(ny < 20)
+        ny = 20;
+
+    if(ny > H-20)
+        ny = H-20;
+
+    if(!hitObs(nx,ny,15)){
+        p.x = nx;
+        p.y = ny;
+    }
+
+    if(p.fireTimer > 0)
+        p.fireTimer--;
 
     if(p.hp <= 0){
         p.alive = 0;
@@ -750,13 +793,13 @@ void updateSpawn(){
         boxTimer = 900 + rand()%500;
     }
 
-    int need = 300;
+    int need = 100;
 
     if(p.map == 2)
-        need = 600;
+        need = 150;
 
     if(p.map == 3)
-        need = 1000;
+        need = 200;
 
     if(p.map < 4 && p.score >= need && !bossSpawned){
 

@@ -55,6 +55,9 @@ struct Player {
     float dashCd;
     float dashTimer;
     int dashKeyOld;
+    
+    int shootKeyOld;
+	int mouseShootOld;
 };
 
 #endif

@@ -131,41 +131,53 @@ void updateMenu(){
 void renderPause(){
 
     setactivepage(page);
-
     setbkcolor(BLACK);
-
     cleardevice();
 
-    drawTextCenter(
-        W/2,
-        130,
-        "GAME PAUSED",
-        YELLOW
-    );
+    int panelW = 620;
+    int panelH = 360;
 
-    int bx = W/2 - 130;
-    int by = 230;
+    int px = W/2 - panelW/2;
+    int py = H/2 - panelH/2;
+
+    setfillstyle(SOLID_FILL, DARKGRAY);
+    bar(px,py,px+panelW,py+panelH);
+
+    setcolor(YELLOW);
+    rectangle(px,py,px+panelW,py+panelH);
+    rectangle(px+8,py+8,px+panelW-8,py+panelH-8);
+
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 4);
+    drawTextCenter(W/2,py+45,"GAME PAUSED",YELLOW);
+
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+    drawTextCenter(W/2,py+95,"Take a breath, survivor.",WHITE);
+
+    int bx = W/2 - 210;
+    int by = py + 145;
 
     drawButton(
         bx,
         by,
-        260,
-        55,
+        420,
+        65,
         "CONTINUE",
-        mouseIn(bx,by,260,55)
+        mouseIn(bx,by,420,65)
     );
 
     drawButton(
         bx,
-        by+80,
-        260,
-        55,
+        by+90,
+        420,
+        65,
         "EXIT TO MENU",
-        mouseIn(bx,by+80,260,55)
+        mouseIn(bx,by+90,420,65)
     );
 
-    setvisualpage(page);
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
+    drawTextCenter(W/2,py+panelH-35,"Press ESC to continue",LIGHTGRAY);
 
+    setvisualpage(page);
     page = 1-page;
 }
 
@@ -173,24 +185,40 @@ void updatePause(){
 
     static int oldEsc = 0;
 
-    int esc =
-        GetAsyncKeyState(VK_ESCAPE) & 0x8000;
+    int esc = GetAsyncKeyState(VK_ESCAPE) & 0x8000;
 
-    if(esc && !oldEsc)
+    if(esc && !oldEsc){
         gameState = STATE_PLAY;
+    }
 
     oldEsc = esc;
 
-    int bx = W/2 - 130;
-    int by = 230;
+    int panelW = 620;
+    int panelH = 360;
 
-    if(leftClick()){
+    int py = H/2 - panelH/2;
 
-        if(mouseIn(bx,by,260,55))
+    int bx = W/2 - 210;
+    int by = py + 145;
+
+    int clicked = 0;
+
+    if(ismouseclick(WM_LBUTTONDOWN)){
+        clearmouseclick(WM_LBUTTONDOWN);
+        clicked = 1;
+    }
+
+    if(clicked){
+
+        if(mouseIn(bx,by,420,65)){
             gameState = STATE_PLAY;
+        }
 
-        if(mouseIn(bx,by+80,260,55))
+        else if(mouseIn(bx,by+90,420,65)){
+            stopMusic();
+            playMenuMusic();
             gameState = STATE_MENU;
+        }
     }
 }
 
