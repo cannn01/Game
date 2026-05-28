@@ -12,6 +12,33 @@
 #include "Game.h"
 #include "Sound.h"
 
+#define C_BG_DARK       DARKGRAY
+#define C_BG_ICE        BLUE
+#define C_BG_LAVA       BLACK
+
+#define C_OUTLINE       BLACK
+#define C_SHADOW        DARKGRAY
+
+#define C_ZOMBIE        GREEN
+#define C_ZOMBIE_DARK   DARKGRAY
+#define C_ZOMBIE_EYE    RED
+
+#define C_PLAYER        BLUE
+#define C_PLAYER_ARMOR  LIGHTGRAY
+#define C_GUN           DARKGRAY
+#define C_GUN_LIGHT     LIGHTGRAY
+
+#define C_WOOD          BROWN
+#define C_WOOD_DARK     DARKGRAY
+#define C_TREE_1        GREEN
+#define C_TREE_2        LIGHTGREEN
+#define C_TREE_3        GREEN
+
+#define C_BLOOD         RED
+#define C_ICE           CYAN
+#define C_FIRE          LIGHTRED
+
+void drawShadow(int x,int y,int rx,int ry);
 void spawnBuffGlow(float x,float y);
 void spawnBlood(float x,float y);
 float dist2(float x1,float y1,float x2,float y2){
@@ -241,6 +268,7 @@ void initGameSystem(){
         (char*)"LAST SURVIVOR: ZOMBIE CHAOS"
     );
 
+	
     loadHighScore();
 }
 
@@ -937,7 +965,7 @@ void drawBackground(){
     if(p.map == 1)
         setbkcolor(DARKGRAY);
     if(p.map == 2)
-    	setbkcolor(BLUE);
+        setbkcolor(BLUE);
     if(p.map == 3)
         setbkcolor(BLACK);
     if(p.map == 4)
@@ -950,85 +978,136 @@ void drawBackground(){
     /* MAP 1: thanh pho do nat */
     if(p.map == 1){
 
-        for(i=0;i<35;i++){
+        setfillstyle(SOLID_FILL,DARKGRAY);
+        bar(0,0,W,H);
+
+        /* vach duong cu */
+        for(i=0;i<W;i+=180){
+            setcolor(LIGHTGRAY);
+            line(i, H/2, i+70, H/2);
+        }
+
+        /* vet nut nen */
+        for(i=0;i<25;i++){
+
             int x = (i*137)%W;
             int y = (i*83)%H;
 
-            setcolor(LIGHTGRAY);
-            rectangle(x,y,x+35,y+20);
-            line(x,y,x+35,y+20);
-            line(x+35,y,x,y+20);
+            setcolor(BLACK);
+
+            line(x,y,x+25,y+8);
+            line(x+25,y+8,x+45,y-6);
+            line(x+45,y-6,x+65,y+14);
         }
 
-        for(i=0;i<20;i++){
+        /* da vu nho */
+        for(i=0;i<70;i++){
+
+            int x = (i*91)%W;
+            int y = (i*61)%H;
+
+            setcolor(LIGHTGRAY);
+
+            putpixel(x,y,LIGHTGRAY);
+            putpixel(x+2,y+1,LIGHTGRAY);
+            putpixel(x-1,y+2,LIGHTGRAY);
+        }
+
+        /* vet mau */
+        for(i=0;i<8;i++){
+
             int x = (i*211)%W;
             int y = (i*97)%H;
 
-            setcolor(BROWN);
-            line(x,y,x+20,y-25);
-            line(x+20,y-25,x+40,y);
-            line(x+10,y,x+10,y+35);
-            line(x+30,y,x+30,y+35);
+            setfillstyle(SOLID_FILL,RED);
+
+            fillellipse(x,y,16,6);
+            fillellipse(x+12,y+4,7,4);
+        }
+
+        /* tuong gach do nat */
+        for(i=0;i<7;i++){
+
+            int x = (i*240)%W;
+            int y = (i*130)%H;
+
+            setfillstyle(SOLID_FILL,BROWN);
+            bar(x,y,x+95,y+26);
+
+            setcolor(BLACK);
+            rectangle(x,y,x+95,y+26);
+
+            line(x,y+13,x+95,y+13);
+            line(x+20,y,x+20,y+26);
+            line(x+50,y,x+50,y+26);
+            line(x+75,y,x+75,y+26);
         }
 
         drawKoch(2,30,H-80,150,0,GREEN);
     }
-
-    /* MAP 2: bang gia */
+	/* MAP 2: bang gia */
     if(p.map == 2){
 
-    setfillstyle(SOLID_FILL, BLUE);
-    bar(0,0,W,H);
+        // Ð?i BLUE thành LIGHTBLUE d? màu n?n d?u và l?nh hon
+        setfillstyle(SOLID_FILL, LIGHTBLUE); 
+        bar(0,0,W,H);
 
-    for(i=0;i<45;i++){
-        int x = (i*101)%W;
-        int y = (i*67)%H;
+        for(i=0;i<35;i++){
 
-        setcolor(WHITE);
-        line(x-7,y,x+7,y);
-        line(x,y-7,x,y+7);
-        line(x-5,y-5,x+5,y+5);
-        line(x+5,y-5,x-5,y+5);
+            int x = (i*101)%W;
+            int y = (i*67)%H;
+
+            setcolor(WHITE);
+            line(x-6,y,x+6,y);
+            line(x,y-6,x,y+6);
+        }
+
+        for(i=0;i<12;i++){
+
+            int x = (i*233)%W;
+            int y = (i*119)%H;
+
+            setcolor(LIGHTCYAN);
+            ellipse(x,y,0,360,45,18);
+
+            setcolor(WHITE);
+            ellipse(x,y,0,360,30,10);
+        }
+
+        drawKoch(3,40,H-70,170,0,WHITE);
     }
-
-    for(i=0;i<15;i++){
-        int x = (i*233)%W;
-        int y = (i*119)%H;
-
-        setcolor(LIGHTCYAN);
-        ellipse(x,y,0,360,45,18);
-
-        setcolor(WHITE);
-        ellipse(x,y,0,360,30,10);
-    }
-
-    drawKoch(3,40,H-70,170,0,WHITE);
-}
+    
 
     /* MAP 3: nui lua */
     if(p.map == 3){
 
+        setfillstyle(SOLID_FILL,BLACK);
+        bar(0,0,W,H);
+
         for(i=0;i<35;i++){
+
             int x = (i*163)%W;
             int y = (i*71)%H;
 
-            setcolor(RED);
+            setcolor(DARKGRAY);
             line(x,y,x+30,y-45);
             line(x+30,y-45,x+60,y);
             line(x,y,x+60,y);
 
-            setfillstyle(SOLID_FILL,RED);
-            fillellipse(x+30,y-10,10,5);
+            setcolor(RED);
+            line(x+30,y-25,x+30,y-5);
         }
 
-        for(i=0;i<25;i++){
+        for(i=0;i<20;i++){
+
             int x = (i*187)%W;
             int y = (i*97)%H;
 
-            setcolor(LIGHTRED);
-            ellipse(x,y,0,360,35,14);
             setfillstyle(SOLID_FILL,RED);
-            fillellipse(x,y,20,8);
+            fillellipse(x,y,22,8);
+
+            setcolor(YELLOW);
+            ellipse(x,y,0,360,30,12);
         }
 
         drawKoch(2,30,H-70,170,0,RED);
@@ -1037,16 +1116,21 @@ void drawBackground(){
     /* MAP 4: hon loan */
     if(p.map == 4){
 
-        for(i=0;i<25;i++){
+        setfillstyle(SOLID_FILL,DARKGRAY);
+        bar(0,0,W,H);
+
+        for(i=0;i<20;i++){
+
             int x = (i*157)%W;
             int y = (i*93)%H;
 
-            setcolor(LIGHTGRAY);
-            rectangle(x,y,x+40,y+22);
-            line(x,y,x+40,y+22);
+            setcolor(BLACK);
+            line(x,y,x+30,y+10);
+            line(x+30,y+10,x+60,y-5);
         }
 
-        for(i=0;i<18;i++){
+        for(i=0;i<12;i++){
+
             int x = (i*203)%W;
             int y = (i*113)%H;
 
@@ -1063,7 +1147,6 @@ void drawBackground(){
     }
 }
 
-
 void drawObs(){
 
     for(int i=0;i<obsCount;i++){
@@ -1074,138 +1157,323 @@ void drawObs(){
         int h = obs[i].h;
         int type = obs[i].type;
 
-        /* nha do nat */
+        /* type 1: thung kim loai */
         if(type == 1){
+
+            drawShadow(x+w/2,y+h+5,w/2,7);
 
             setfillstyle(SOLID_FILL,LIGHTGRAY);
             bar(x,y,x+w,y+h);
 
             setcolor(BLACK);
             rectangle(x,y,x+w,y+h);
+            rectangle(x+6,y+6,x+w-6,y+h-6);
+
             line(x,y,x+w,y+h);
             line(x+w,y,x,y+h);
 
-            line(x+20,y,x+20,y+h);
-            line(x+w-20,y,x+w-20,y+h);
+            setcolor(WHITE);
+            line(x+8,y+8,x+w-8,y+8);
         }
 
-        /* cot go / than cay */
+        /* type 2: thung go / container nho */
         else if(type == 2){
+
+            drawShadow(x+w/2,y+h+5,w/2,7);
 
             setfillstyle(SOLID_FILL,BROWN);
             bar(x,y,x+w,y+h);
 
-            setcolor(YELLOW);
+            setcolor(BLACK);
             rectangle(x,y,x+w,y+h);
 
-            line(x+10,y,x+10,y+h);
-            line(x+w-10,y,x+w-10,y+h);
+            setcolor(YELLOW);
+            rectangle(x+8,y+8,x+w-8,y+h-8);
+
+            line(x+8,y+8,x+w-8,y+h-8);
+            line(x+w-8,y+8,x+8,y+h-8);
         }
 
-        /* cay */
+        /* type 3: cay */
         else if(type == 3){
 
-            setfillstyle(SOLID_FILL,GREEN);
-            fillellipse(x+w/2,y+h/2,w/2,h/2);
+            int trunkX = x + w/2;
+            int trunkTop = y + h/2;
+            int trunkBottom = y + h + 35;
 
-            setcolor(BROWN);
-            line(x+w/2,y+h,x+w/2,y+h+35);
+            /* chi co 1 bong duoi goc cay */
+            drawShadow(trunkX,trunkBottom+4,42,8);
+
+            /* than cay */
+            setfillstyle(SOLID_FILL,BROWN);
+            bar(trunkX-8,trunkTop,trunkX+8,trunkBottom);
+
+            setcolor(BLACK);
+            rectangle(trunkX-8,trunkTop,trunkX+8,trunkBottom);
+
+            /* tan la nhieu lop */
+            setfillstyle(SOLID_FILL,GREEN);
+            fillellipse(trunkX-22,y+h/2,32,24);
+
+            setfillstyle(SOLID_FILL,LIGHTGREEN);
+            fillellipse(trunkX+18,y+h/2-8,32,24);
+
+            setfillstyle(SOLID_FILL,GREEN);
+            fillellipse(trunkX,y+h/2-25,36,28);
+
+            setcolor(BLACK);
+            ellipse(trunkX,y+h/2-10,0,360,45,35);
         }
 
-        /* bang */
+        /* type 4/5: bang */
         else if(type == 4 || type == 5){
 
-            setfillstyle(SOLID_FILL,LIGHTCYAN);
+            drawShadow(x+w/2,y+h+5,w/2,7);
+
+            setfillstyle(SOLID_FILL,CYAN);
             bar(x,y,x+w,y+h);
 
-            setcolor(WHITE);
+            setcolor(BLACK);
             rectangle(x,y,x+w,y+h);
 
+            setcolor(WHITE);
             line(x,y+h,x+w/2,y);
             line(x+w/2,y,x+w,y+h);
             line(x,y,x+w,y+h);
+
+            setcolor(BLUE);
+            rectangle(x+6,y+6,x+w-6,y+h-6);
         }
 
-        /* nui da */
+        /* type 6: da nui lua */
         else if(type == 6){
+
+            drawShadow(x+w/2,y+h+5,w/2,7);
 
             setfillstyle(SOLID_FILL,DARKGRAY);
             bar(x,y,x+w,y+h);
 
-            setcolor(LIGHTGRAY);
+            setcolor(BLACK);
             rectangle(x,y,x+w,y+h);
+
+            setcolor(LIGHTGRAY);
             line(x,y+h,x+w/2,y);
             line(x+w/2,y,x+w,y+h);
+
+            setcolor(RED);
+            line(x+15,y+h-15,x+w/2,y+10);
         }
 
-        /* dung nham */
+        /* type 7: dung nham */
         else if(type == 7){
+
+            drawShadow(x+w/2,y+h/2+12,w/2,6);
 
             setfillstyle(SOLID_FILL,RED);
             fillellipse(x+w/2,y+h/2,w/2,h/2);
 
+            setfillstyle(SOLID_FILL,LIGHTRED);
+            fillellipse(x+w/2,y+h/2,w/2-14,h/2-10);
+
             setcolor(YELLOW);
             ellipse(x+w/2,y+h/2,0,360,w/2-10,h/2-10);
+
+            setcolor(BLACK);
+            ellipse(x+w/2,y+h/2,0,360,w/2,h/2);
         }
     }
+}
+
+void drawShadow(int x,int y,int rx,int ry){
+
+    setfillstyle(SOLID_FILL,BLACK);
+
+    fillellipse(x,y,rx,ry);
 }
 
 void drawPlayer(){
 
     float a = p.angle;
+
+    float fx = cos(a);
+    float fy = sin(a);
+
+    float rx = cos(a + PI/2);
+    float ry = sin(a + PI/2);
+
     int cx = (int)p.x;
     int cy = (int)p.y;
 
-    int bodyColor = p.dashTimer > 0 ? YELLOW : LIGHTGREEN;
+    /* bong */
+    drawShadow(cx,cy+22,18,6);
 
-    setfillstyle(SOLID_FILL,bodyColor);
-    fillellipse(cx,cy,18,23);
+    /* body */
+    setfillstyle(SOLID_FILL,BLUE);
 
-    setcolor(WHITE);
-    ellipse(cx,cy,0,360,18,23);
-
-    int headX = cx + cos(a)*9;
-    int headY = cy + sin(a)*9;
-
-    setfillstyle(SOLID_FILL,LIGHTGRAY);
-    fillellipse(headX,headY,10,10);
+    fillellipse(cx,cy,13,16);
 
     setcolor(BLACK);
-    line(headX-3,headY-2,headX+3,headY-2);
 
-    int arm1x = cx + cos(a+1.5f)*18;
-    int arm1y = cy + sin(a+1.5f)*18;
+    ellipse(cx,cy,0,360,13,16);
 
-    int arm2x = cx + cos(a-1.5f)*18;
-    int arm2y = cy + sin(a-1.5f)*18;
+    /* giap */
+    setfillstyle(SOLID_FILL,DARKGRAY);
 
-    setcolor(WHITE);
-    line(cx,cy,arm1x,arm1y);
-    line(cx,cy,arm2x,arm2y);
+    fillellipse(cx,cy+1,8,10);
 
-    int gunX1 = cx + cos(a)*15;
-    int gunY1 = cy + sin(a)*15;
+    /* balo */
+    setfillstyle(SOLID_FILL,BROWN);
 
-    int gunX2 = cx + cos(a)*65;
-    int gunY2 = cy + sin(a)*65;
+    fillellipse(
+        cx - fx*10,
+        cy - fy*10,
+        7,
+        9
+    );
 
-    setcolor(YELLOW);
+    /* dau */
+    int headX = cx;
+    int headY = cy-18;
+
+    setfillstyle(SOLID_FILL,BLUE);
+
+    fillellipse(
+        headX,
+        headY,
+        11,
+        11
+    );
+
+    setcolor(BLACK);
+
+    ellipse(
+        headX,
+        headY,
+        0,
+        360,
+        11,
+        11
+    );
+
+    /* visor */
+    setfillstyle(SOLID_FILL,LIGHTGRAY);
+
+    bar(
+        headX-8,
+        headY-2,
+        headX+8,
+        headY+5
+    );
+
+    setcolor(BLACK);
+
+    rectangle(
+        headX-8,
+        headY-2,
+        headX+8,
+        headY+5
+    );
+
+    /* mat */
+    setfillstyle(SOLID_FILL,WHITE);
+
+    fillellipse(headX-4,headY+1,2,2);
+    fillellipse(headX+4,headY+1,2,2);
+
+    setfillstyle(SOLID_FILL,BLACK);
+
+    fillellipse(headX-4,headY+1,1,1);
+    fillellipse(headX+4,headY+1,1,1);
+
+    /* chan */
+    setcolor(BLACK);
+
     setlinestyle(SOLID_LINE,0,THICK_WIDTH);
-    line(gunX1,gunY1,gunX2,gunY2);
+
+    line(cx-5,cy+12,cx-8,cy+22);
+    line(cx+5,cy+12,cx+8,cy+22);
+
+    /* vai */
+    int shoulderX = cx + fx*5;
+    int shoulderY = cy + fy*5;
+
+    /* tay */
+    int handX = cx + fx*18;
+    int handY = cy + fy*18;
+
+    line(
+        cx-rx*5,
+        cy-ry*5,
+        handX-rx*4,
+        handY-ry*4
+    );
+
+    line(
+        cx+rx*5,
+        cy+ry*5,
+        handX+rx*4,
+        handY+ry*4
+    );
+
+    /* sung */
+    int gunX1 = cx + fx*14;
+    int gunY1 = cy + fy*14;
+
+    int gunX2 = cx + fx*38;
+    int gunY2 = cy + fy*38;
+
+    int sx = rx*3;
+    int sy = ry*3;
+
+    int poly[10];
+
+    poly[0]=gunX1+sx;
+    poly[1]=gunY1+sy;
+
+    poly[2]=gunX2+sx;
+    poly[3]=gunY2+sy;
+
+    poly[4]=gunX2-sx;
+    poly[5]=gunY2-sy;
+
+    poly[6]=gunX1-sx;
+    poly[7]=gunY1-sy;
+
+    poly[8]=poly[0];
+    poly[9]=poly[1];
+
+    setfillstyle(SOLID_FILL,DARKGRAY);
+
+    fillpoly(5,poly);
+
+    setcolor(BLACK);
+
+    drawpoly(5,poly);
+
+    /* nong */
+    setcolor(LIGHTGRAY);
+
+    line(
+        gunX2,
+        gunY2,
+        gunX2+fx*8,
+        gunY2+fy*8
+    );
+
+    /* flash */
+    if(p.fireTimer > p.fireCd-3){
+
+        setfillstyle(SOLID_FILL,YELLOW);
+
+        fillellipse(
+            gunX2+fx*10,
+            gunY2+fy*10,
+            4,
+            4
+        );
+    }
 
     setlinestyle(SOLID_LINE,0,NORM_WIDTH);
-    myCircle(gunX2,gunY2,5,YELLOW);
-
-    if(p.dashTimer > 0){
-
-        for(int i=1;i<=6;i++){
-
-            int tx = cx - cos(a)*i*20;
-            int ty = cy - sin(a)*i*20;
-
-            myCircle(tx,ty,8,LIGHTCYAN);
-        }
-    }
 }
 
 void drawBullets(){
@@ -1244,127 +1512,153 @@ void drawEnemies(){
         int cx = (int)e->x;
         int cy = (int)e->y;
 
-        int r = e->boss ? 50 : 20;
+        int boss = e->boss;
 
-        int bodyColor = GREEN;
+        int r = boss ? 48 : 20;
 
-        if(e->type == 2 || e->type == 12)
-            bodyColor = LIGHTCYAN;
+        int skin = GREEN;
+        int cloth = DARKGRAY;
 
-        if(e->type == 3 || e->type == 13)
-            bodyColor = LIGHTRED;
+        if(e->type == 2 || e->type == 12){
 
-        if(e->type >= 10)
-            bodyColor = MAGENTA;
+            skin = LIGHTCYAN;
+            cloth = BLUE;
+        }
 
-        if(e->boss)
-            bodyColor = BROWN;
+        if(e->type == 3 || e->type == 13){
 
-        int walk = (int)(sin((gameTick+i)*0.18f)*6);
+            skin = LIGHTRED;
+            cloth = BROWN;
+        }
 
-        /* bong than */
-        setfillstyle(SOLID_FILL,bodyColor);
-        fillellipse(cx,cy,r,r+10);
+        if(e->type >= 10 && !boss){
 
-        setcolor(WHITE);
-        ellipse(cx,cy,0,360,r,r+10);
+            skin = MAGENTA;
+            cloth = DARKGRAY;
+        }
 
-        /* dau */
-        setfillstyle(SOLID_FILL,bodyColor);
-        fillellipse(cx,cy-r/2, r-5, r-2);
+        if(boss){
 
-        setcolor(WHITE);
-        ellipse(cx,cy-r/2,0,360,r-5,r-2);
+            skin = BROWN;
+            cloth = DARKGRAY;
+        }
 
-        /* mat do */
-        setfillstyle(SOLID_FILL,RED);
-        fillellipse(cx-7,cy-r/2-5,4,4);
-        fillellipse(cx+7,cy-r/2-5,4,4);
+        int walk =
+            (int)(sin((gameTick+i)*0.25f)*6);
 
-        /* mieng */
+        drawShadow(
+            cx,
+            cy+r+8,
+            boss ? 40 : 20,
+            boss ? 12 : 6
+        );
+
+        /* chân */
         setcolor(BLACK);
-        line(cx-9,cy-r/2+8,cx+9,cy-r/2+8);
-        line(cx-5,cy-r/2+12,cx+5,cy-r/2+12);
 
-        /* tay zombie */
-        setcolor(bodyColor);
         setlinestyle(SOLID_LINE,0,THICK_WIDTH);
 
-        line(cx-r+4,cy-5,cx-r-22,cy+12+walk);
-        line(cx+r-4,cy-5,cx+r+22,cy+12-walk);
+        line(cx-7,cy+r-5,cx-18,cy+r+20+walk);
+        line(cx+7,cy+r-5,cx+18,cy+r+20-walk);
 
-        /* chan */
-        line(cx-8,cy+r,cx-18,cy+r+25+walk);
-        line(cx+8,cy+r,cx+18,cy+r+25-walk);
+        /* tay */
+        line(cx-r+5,cy,cx-r-18,cy+12);
+        line(cx+r-5,cy,cx+r+18,cy+12);
+
+        /* thân */
+        setfillstyle(SOLID_FILL,cloth);
+
+        fillellipse(cx,cy,r,r+10);
+
+        setcolor(BLACK);
+
+        ellipse(cx,cy,0,360,r,r+10);
+
+        /* d?u */
+        setfillstyle(SOLID_FILL,skin);
+
+        fillellipse(cx,cy-r/2-8,r-3,r-1);
+
+        setcolor(BLACK);
+
+        ellipse(cx,cy-r/2-8,0,360,r-3,r-1);
+
+        /* m?t */
+        setfillstyle(SOLID_FILL,WHITE);
+
+        fillellipse(cx-6,cy-r/2-12,3,3);
+        fillellipse(cx+6,cy-r/2-12,3,3);
+
+        setfillstyle(SOLID_FILL,RED);
+
+        fillellipse(cx-6,cy-r/2-12,1,1);
+        fillellipse(cx+6,cy-r/2-12,1,1);
+
+        /* mi?ng */
+        setcolor(BLACK);
+
+        line(
+            cx-8,
+            cy-r/2,
+            cx+8,
+            cy-r/2
+        );
+
+        /* s?o */
+        setcolor(RED);
+
+        line(
+            cx-10,
+            cy-r/2-18,
+            cx-2,
+            cy-r/2-8
+        );
+
+        /* aura */
+        if(e->type == 2 || e->type == 12)
+            myCircle(cx,cy,r+8,LIGHTCYAN);
+
+        if(e->type == 3 || e->type == 13)
+            myCircle(cx,cy,r+8,LIGHTRED);
+
+        if(e->type >= 10 && !boss)
+            myCircle(cx,cy,r+10,YELLOW);
+
+        if(boss)
+            myCircle(cx,cy,r+16,YELLOW);
 
         setlinestyle(SOLID_LINE,0,NORM_WIDTH);
 
-        /* zombie bang */
-        if(e->type == 2 || e->type == 12){
-
-            setcolor(WHITE);
-
-            line(cx-r,cy-r,cx-r-10,cy-r-18);
-            line(cx,cy-r-8,cx,cy-r-28);
-            line(cx+r,cy-r,cx+r+10,cy-r-18);
-
-            myCircle(cx,cy,r+8,LIGHTCYAN);
-        }
-
-        /* zombie lua */
-        if(e->type == 3 || e->type == 13){
-
-            setcolor(YELLOW);
-
-            line(cx,cy-r-18,cx-10,cy-r-38);
-            line(cx-10,cy-r-38,cx+4,cy-r-30);
-            line(cx+4,cy-r-30,cx+12,cy-r-44);
-            line(cx+12,cy-r-44,cx+18,cy-r-20);
-
-            myCircle(cx,cy,r+8,RED);
-        }
-
-        /* zombie dac biet */
-        if(e->type >= 10 && !e->boss){
-
-            setcolor(YELLOW);
-            myCircle(cx,cy,r+10,YELLOW);
-
-            line(cx-r,cy-r,cx-r-12,cy-r-15);
-            line(cx+r,cy-r,cx+r+12,cy-r-15);
-        }
-
-        /* boss */
-        if(e->boss){
-
-            setcolor(YELLOW);
-
-            myCircle(cx,cy,r+15,YELLOW);
-
-            line(cx-r,cy-r,cx-r-25,cy-r-25);
-            line(cx+r,cy-r,cx+r+25,cy-r-25);
-
-            setcolor(RED);
-            line(cx-20,cy+r,cx+20,cy+r);
-            line(cx-15,cy+r+8,cx+15,cy+r+8);
-        }
-
-        /* thanh mau */
-        int barW = e->boss ? 160 : 55;
+        /* máu */
+        int barW = boss ? 150 : 50;
 
         setfillstyle(SOLID_FILL,BLACK);
-        bar(cx-barW/2,cy-r-40,cx+barW/2,cy-r-27);
 
-        setfillstyle(SOLID_FILL,RED);
         bar(
             cx-barW/2,
-            cy-r-40,
-            cx-barW/2 + (int)(barW*(float)e->hp/e->maxHp),
-            cy-r-27
+            cy-r-42,
+            cx+barW/2,
+            cy-r-30
+        );
+
+        setfillstyle(SOLID_FILL,RED);
+
+        bar(
+            cx-barW/2,
+            cy-r-42,
+            cx-barW/2 +
+            (int)(barW*(float)e->hp/e->maxHp),
+            cy-r-30
         );
 
         setcolor(WHITE);
-        rectangle(cx-barW/2,cy-r-40,cx+barW/2,cy-r-27);
+
+        rectangle(
+            cx-barW/2,
+            cy-r-42,
+            cx+barW/2,
+            cy-r-30
+        );
     }
 }
 
